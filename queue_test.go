@@ -1,4 +1,4 @@
-package eventqueue
+package eqm
 
 import (
     "testing"
