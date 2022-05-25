@@ -62,7 +62,11 @@ func (eq *EventQueue) MapEvent(key string, eventFunction func(Event) EventReply)
 
 func (eq EventQueue) StartThread() {
     for {
-        eq.processLoop()
+        if eq.Default != nil {
+            eq.processLoop()
+        } else {
+            eq.processNonDefaultLoop()
+        }
     }
 }
 
@@ -79,6 +83,23 @@ func (eq EventQueue) processLoop() {
     default:
         if eq.Default != nil {
             eq.Default()
+        }
+    }
+
+    if eq.After != nil {
+        eq.After()
+    }
+}
+
+func (eq EventQueue) processNonDefaultLoop() {
+    if eq.Before != nil {
+        eq.Before()
+    }
+
+    select {
+    case event := <-eq.Events:
+        if _, ok := eq.Map[event.Action]; ok {
+            event.Reply <-eq.Map[event.Action](event)
         }
     }
 
