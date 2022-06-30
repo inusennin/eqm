@@ -29,7 +29,7 @@ func TestEventQueueManager(t *testing.T) {
         assert.True(t, strings.Contains(err.Error(), "not initialized"))
     }
 
-    testMan.AddQueue(testQueue)
+    testMan.AddQueue("TestQueue", testQueue)
     res, err := testMan.ProcessEvent(testEvent)
     if assert.NoError(t, err) {
         assert.Equal(t, "TestAction", res.(string))

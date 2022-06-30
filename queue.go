@@ -1,34 +1,11 @@
 package eqm
 
-type EventReply struct {
-    Result      interface{}     // The result from processing the Event
-    Error       error           // Any errors while processing the corresponding event should be put here
+import "fmt"
+
+type EventQueueInterface interface {
+    StartQueue()
+    SendEvent(e Event) EventReply
 }
-
-func NewEventReply(result interface{}, err error) EventReply {
-    return EventReply{result, err}
-}
-
-type Event struct {
-    QueueName   string              // The name the EventQueue is registered with
-    Action      string              // A key defining the function the EventQueuue should call
-    Args        []interface{}       // The list of arguments (if any) the EventController needs to take action
-    Reply       chan EventReply     // Channel to put the EventReply on
-}
-
-func NewEvent(queue, action string, args ...interface{}) Event {
-    return Event{
-        QueueName:  queue,
-        Action:     action,
-        Args:       args,
-        Reply:      make(chan EventReply),
-    }
-}
-
-
-type EventChannel chan Event
-
-type EventMap map[string]func(Event) EventReply
 
 type EventQueue struct {
     Name    string
@@ -37,6 +14,18 @@ type EventQueue struct {
     Map     EventMap
     Default func()
     After   func()
+}
+
+func (eq EventQueue) SendEvent(e Event) EventReply {
+    if eq.Events == nil {
+        return NewEventReply("", fmt.Errorf("eventqueue: Queue of name [%s] not initialized.", eq.Name))
+    }
+
+    if e.Reply == nil {
+        e.Reply = make(chan EventReply)
+    }
+    eq.Events <-e
+    return <-e.Reply
 }
 
 func (eq *EventQueue) SetEventsBuffer(buffSize int) {
@@ -60,7 +49,7 @@ func (eq *EventQueue) MapEvent(key string, eventFunction func(Event) EventReply)
     *eq = old
 }
 
-func (eq EventQueue) StartThread() {
+func (eq EventQueue) StartQueue() {
     for {
         eq.processLoop()
     }

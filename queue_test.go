@@ -80,7 +80,7 @@ func TestEventQueueProcessLoop(t *testing.T) {
     testEvent := NewEvent("TestQueue", "TestAction")
     testQueue.Events <-testEvent
 
-    go testQueue.StartThread()
+    go testQueue.StartQueue()
     assert.Equal(t, "Before", <-chanResult)
 
     res := <-testEvent.Reply

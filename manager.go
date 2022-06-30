@@ -4,16 +4,16 @@ import (
     "fmt"
 )
 
-type EventQueueManager map[string]EventQueue
+type EventQueueManager map[string]EventQueueInterface
 
-func (eqm EventQueueManager) AddQueue(queue EventQueue) {
+func (eqm EventQueueManager) AddQueue(name string, queue EventQueueInterface) {
     // If we use NewEventQueueManager this should never happen but check for safety
     if eqm == nil {
-        eqm = make(map[string]EventQueue)
+        eqm = make(map[string]EventQueueInterface)
     }
 
-    go queue.StartThread()
-    eqm[queue.Name] = queue
+    go queue.StartQueue()
+    eqm[name] = queue
 }
 
 func (eqm EventQueueManager) ProcessEvent(e Event) (interface{}, error) {
@@ -24,21 +24,10 @@ func (eqm EventQueueManager) ProcessEvent(e Event) (interface{}, error) {
         return "",  err
     }
 
-    if eqm[e.QueueName].Events == nil {
-        err := fmt.Errorf("eventqueue: Queue of name [%s] not initialized.", e.QueueName)
-        return "", err
-    }
-
-    // If we didn't define the reply buffer previously, we need to make sure we have it now
-    if e.Reply == nil {
-        e.Reply = make(chan EventReply)
-    }
-
-    eqm[e.QueueName].Events <-e
-    result := <-e.Reply
+    result := eqm[e.QueueName].SendEvent(e)
     return result.Result, result.Error
 }
 
 func NewEventQueueManager() EventQueueManager {
-    return make(map[string]EventQueue)
+    return make(map[string]EventQueueInterface)
 }
