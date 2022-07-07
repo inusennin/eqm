@@ -17,7 +17,7 @@ func (seq SingleEventQueue) StartQueue() {
 
 func  (seq SingleEventQueue) SendEvent(e Event) EventReply {
     if seq.Call == nil {
-        return NewEventReply("", fmt.Errorf("eventqueue: Call for SiingleEventQueue [%s] not initialized.", seq.Name))
+        return NewEventReply("", fmt.Errorf("eventqueue: Call for SingleEventQueue [%s] not initialized.", seq.Name))
     }
 
     if seq.Events == nil {
