@@ -79,3 +79,11 @@ func (teq *TickerEventQueue) MapEvent(key string, eventFunction func(Event) Even
 
     *teq = old
 }
+
+func NewTickerEventQueue(name string) TickerEventQueue {
+    return TickerEventQueue {
+        Name:   name,
+        Events: make(chan Event),
+        Map:    make(map[string]func(Event) EventReply),
+    }
+}
